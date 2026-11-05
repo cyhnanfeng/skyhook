@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#03070a">
+<meta name="description" content="天穹电梯 · 离线单页 3D 太空电梯体验">
+<title>天穹电梯 · SKYHOOK</title>
+<style>
+/*__CSS__*/
+</style>
+</head>
+<body class="intro-open">
+<div id="stage">
+  <canvas id="scene" aria-label="天穹电梯三维场景"></canvas>
+
+  <div id="ui">
+    <header class="top">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <circle cx="20" cy="20" r="7.2" stroke="currentColor" stroke-width=".9" opacity=".9"/>
+          <ellipse cx="20" cy="20" rx="17.5" ry="6.4" stroke="currentColor" stroke-width=".7" opacity=".55" transform="rotate(-28 20 20)"/>
+          <g class="spin">
+            <ellipse cx="20" cy="20" rx="17.5" ry="6.4" stroke="currentColor" stroke-width=".7" opacity=".4" transform="rotate(32 20 20)"/>
+            <circle cx="35.5" cy="13.2" r="1.15" fill="currentColor"/>
+          </g>
+          <path d="M20 1.5v8M20 30.5v8" stroke="currentColor" stroke-width=".55" opacity=".28"/>
+          <circle cx="20" cy="20" r="1.7" fill="currentColor"/>
+        </svg>
+        <div>
+          <div class="brand-en">SKYHOOK / 01</div>
+          <div class="brand-cn">天穹电梯</div>
+        </div>
+      </div>
+      <div class="mission-state"><span class="status-dot"></span><span id="stateLabel">待命 · STANDBY</span></div>
+      <div class="top-right">
+        <button class="icon-btn" id="btnSound" aria-label="切换音效" title="音效 (M)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 5 6.8 8.6H3.6v6.8h3.2L11 19V5Z"/>
+            <path class="snd-wave" d="M15.2 8.5a5 5 0 0 1 0 7M18.2 6a9 9 0 0 1 0 12"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="alt-panel" aria-live="polite">
+      <div class="kicker">ALTITUDE / 海拔</div>
+      <div class="alt-number"><span id="altValue">0</span><span class="alt-unit" id="altUnit">M</span></div>
+      <div class="alt-sub"><i></i><span id="altSub">沙漠发射台 · 待命</span></div>
+      <div class="telemetry">
+        <div class="tele-item"><small>VELOCITY</small><b id="speedValue">0<em>KM/H</em></b></div>
+        <div class="tele-item"><small>TETHER TENSION</small><b id="tensionValue">74.0<em>%</em></b><div class="tension"><i id="tensionBar"></i></div></div>
+        <div class="tele-item"><small>TO STATION</small><b id="distanceValue">400<em>KM</em></b></div>
+      </div>
+    </section>
+
+    <aside class="altimeter" aria-hidden="true">
+      <div class="alt-read"><b>TIANYONG</b>ORBITAL RING<br><span id="altRead">0.0 KM</span></div>
+      <div class="alt-rail">
+        <div class="alt-ticks">
+          <div class="alt-tick major" style="bottom:100%"><span>400</span><i></i></div>
+          <div class="alt-tick" style="bottom:75%"><span>300</span><i></i></div>
+          <div class="alt-tick" style="bottom:50%"><span>200</span><i></i></div>
+          <div class="alt-tick" style="bottom:25%"><span>100</span><i></i></div>
+          <div class="alt-tick major" style="bottom:0%"><span>0</span><i></i></div>
+        </div>
+        <div class="alt-track" id="altTrack"><div class="alt-marker" id="altMarker"></div></div>
+      </div>
+    </aside>
+
+    <div class="hint"><b>拖拽</b> 环视 · <b>滚轮</b> 缩放 · <b>1 / 2 / 3</b> 切换视角 · <b>空格</b> 启动</div>
+
+    <div class="bottom">
+      <div class="actions">
+        <button class="btn btn-primary" id="btnLaunch">
+          <svg viewBox="0 0 12 12" fill="currentColor"><path d="M2.2 1.4 10.4 6l-8.2 4.6V1.4Z"/></svg>
+          <span>启动电梯</span>
+        </button>
+        <button class="btn btn-ghost" id="btnSkip" disabled>
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M2.5 2.5 7 7l-4.5 4.5M7.4 2.5 11.9 7l-4.5 4.5"/></svg>
+          <span>跳过</span>
+        </button>
+        <button class="btn btn-ghost" id="btnReplay">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M11.6 5.3A5 5 0 1 0 12 8.2"/><path d="M12 1.8v3.8H8.2"/></svg>
+          <span>重播</span>
+        </button>
+      </div>
+
+      <div class="progress-box">
+        <div class="progress-head">
+          <div class="progress-phase"><b id="phaseName">发射台</b><span id="phaseEn">LAUNCH PAD</span></div>
+          <div class="progress-pct"><span id="pctValue">0.0</span>%</div>
+        </div>
+        <div class="progress-track" id="progressTrack">
+          <div class="progress-fill" id="progressFill"></div>
+          <div class="progress-dot" style="left:17%"></div>
+          <div class="progress-dot" style="left:34%"></div>
+          <div class="progress-dot" style="left:58%"></div>
+          <div class="progress-dot" style="left:78%"></div>
+          <div class="progress-dot" style="left:91%"></div>
+        </div>
+      </div>
+
+      <div class="views" role="group" aria-label="摄像机视角">
+        <button class="view-btn active" data-mode="chase" title="第三人称追拍 (1)">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.15"><rect x="1.5" y="4" width="8" height="6" rx="1"/><path d="m9.5 6 3-1.8v5.6L9.5 8"/></svg>
+          <span>追拍</span><span class="kk">1</span>
+        </button>
+        <button class="view-btn" data-mode="porthole" title="舷窗第一人称 (2)">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.15"><circle cx="7" cy="7" r="4.8"/><circle cx="7" cy="7" r="2.2" opacity=".55"/></svg>
+          <span>舷窗</span><span class="kk">2</span>
+        </button>
+        <button class="view-btn" data-mode="wide" title="广角 (3)">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.15"><path d="M1.5 4.5v5M12.5 4.5v5M3 7h8M3 7l1.6-1.6M3 7l1.6 1.6M11 7 9.4 5.4M11 7 9.4 8.6"/></svg>
+          <span>广角</span><span class="kk">3</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="toast"><b></b><span></span></div>
+  </div>
+
+  <div id="intro">
+    <div class="intro-inner">
+      <div class="intro-eyebrow">ORBITAL LIFT / 400 KM</div>
+      <h1><span class="title-en">SKYHOOK</span>天穹电梯</h1>
+      <p class="intro-sub">从沙漠发射台启程，穿过云层与平流层，沿复合缆索上升 <em>400 公里</em>，抵达环形的天穹站。玻璃轿厢之外，是一整颗缓慢转动的地球。</p>
+      <div class="intro-rule"></div>
+      <div class="launch-wrap">
+        <button class="launch-big" id="btnStart">
+          <span class="orb"></span>
+          <span>启动电梯</span>
+        </button>
+        <div class="launch-note"><b>建议佩戴耳机</b>拖拽环视 · 1 / 2 / 3 切换视角</div>
+      </div>
+      <div class="intro-foot">
+        <span><i></i>程序化生成</span>
+        <span><i></i>离线单页</span>
+        <span><i></i>无外部资源</span>
+        <span><i></i>WEBGL / BLOOM</span>
+      </div>
+    </div>
+    <div class="dossier">
+      <div class="dossier-title">MISSION DOSSIER / 任务档案</div>
+      <div class="dossier-row"><span>发射场</span><b>SH-01 / 沙海</b></div>
+      <div class="dossier-row"><span>复合缆索</span><b>张力带 + 承载索</b></div>
+      <div class="dossier-row"><span>磁悬浮导轨</span><b>分段驱动 · 双轨</b></div>
+      <div class="dossier-row"><span>目的地</span><b>天穹站 / 400 KM</b></div>
+      <div class="dossier-row"><span>轿厢</span><b>全景玻璃 / 2 人</b></div>
+    </div>
+  </div>
+
+  <div id="complete">
+    <div class="complete-card">
+      <div class="complete-kicker">DOCKING COMPLETE / 对接完成</div>
+      <h2 class="complete-title">抵达 <span>天穹站</span></h2>
+      <div class="complete-sub">TIANYONG ORBITAL RING · 400.0 KM</div>
+      <div class="complete-stats">
+        <div><small>ALTITUDE</small><b>400.0 KM</b></div>
+        <div><small>FLIGHT TIME</small><b id="completeTime">01:15</b></div>
+        <div><small>VIEW</small><b>地球 · 晨昏线</b></div>
+      </div>
+      <div class="complete-actions">
+        <button class="btn btn-primary" id="btnAgain">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M11.6 5.3A5 5 0 1 0 12 8.2"/><path d="M12 1.8v3.8H8.2"/></svg>
+          <span>再飞一次</span>
+        </button>
+        <button class="btn btn-ghost" id="btnLook">继续环视</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="rotate-tip" id="rotateTip">
+    <svg viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="9" y="2.5" width="12" height="25" rx="2"/><path d="M13 25.5h4"/></svg>
+    <span>横屏体验更佳</span>
+  </div>
+
+  <div id="portholeGlass" aria-hidden="true"></div>
+  <div id="flash"></div>
+
+  <div id="loader">
+    <svg class="loader-mark" viewBox="0 0 40 40" fill="none">
+      <circle cx="20" cy="20" r="7.2" stroke="currentColor" stroke-width=".9" opacity=".9"/>
+      <ellipse cx="20" cy="20" rx="17.5" ry="6.4" stroke="currentColor" stroke-width=".7" opacity=".55" transform="rotate(-28 20 20)"/>
+      <ellipse cx="20" cy="20" rx="17.5" ry="6.4" stroke="currentColor" stroke-width=".7" opacity=".4" transform="rotate(32 20 20)"/>
+      <circle cx="20" cy="20" r="1.7" fill="currentColor"/>
+    </svg>
+    <div class="loader-title">SKYHOOK / 天穹电梯</div>
+    <div class="loader-track"></div>
+    <div class="loader-status" id="loaderStatus">正在展开缆索与星空…</div>
+  </div>
+</div>
+
+<script>
+/*__THREE__*/
+</script>
+<script>
+/*__APP__*/
+</script>
+</body>
+</html>
